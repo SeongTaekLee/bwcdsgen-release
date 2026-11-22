@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BWCDSGen</title>
+<meta name="description" content="SAP BW InfoObject 마스터데이터를 Datasphere Replication Flow용 ABAP CDS View로 자동 생성하는 Windows 프로그램">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 단일 컬럼 제품 페이지 — 상단 다운로드, 스크린샷, 결과물 예시, 사용 순서, 기본 규칙, 버전 기록 */
+:root {
+  --bg: #f4f7f8;
+  --surface: #ffffff;
+  --fg: #15222a;
+  --muted: #586a75;
+  --line: #d6dfe4;
+  --accent: #0d6b77;
+  --accent-fg: #ffffff;
+  --code-bg: #eaf1f3;
+  --warn: #7a5200;
+  --warn-bg: #fff3d6;
+  --font-body: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "D2Coding", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e161b; --surface: #152129; --fg: #e2eaee; --muted: #93a6b1; --line: #253540;
+    --accent: #4db5c1; --accent-fg: #052226; --code-bg: #1a2932; --warn: #f0c46a; --warn-bg: #2c2311;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.7;
+}
+.wrap {
+  max-width: 980px; margin: 0 auto;
+  padding: 48px max(16px, env(safe-area-inset-right, 0px)) 72px max(16px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 56px;
+}
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(32px, 5vw, 44px); line-height: 1.15; margin: 6px 0 12px; letter-spacing: -.01em; }
+h2 { font-size: 20px; line-height: 1.35; margin: 0 0 16px; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.lead { font-size: 17px; color: var(--muted); }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.k { font-family: var(--font-mono); font-size: .92em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+
+/* hero */
+.hero { display: grid; gap: 22px; }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  background: var(--accent); color: var(--accent-fg); font-weight: 700;
+  padding: 13px 26px; border-radius: 8px; font-size: 16px;
+}
+.btn svg { width: 18px; height: 18px; }
+.meta { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta a { color: var(--muted); }
+.flow {
+  font-family: var(--font-mono); font-size: 13px; background: var(--code-bg);
+  border-radius: 6px; padding: 10px 14px; overflow-x: auto; white-space: nowrap;
+}
+
+/* screenshot */
+figure { margin: 0; }
+.shot {
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface);
+  box-shadow: 0 12px 40px -18px rgba(13, 50, 60, .35);
+}
+.shot img { display: block; width: 100%; height: auto; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+/* outputs */
+.outputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.out { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 6px; align-content: start; }
+.out b { font-size: 15px; }
+.out .file { font-family: var(--font-mono); font-size: 12px; color: var(--muted); word-break: break-all; }
+.out p { font-size: 14px; color: var(--muted); }
+.examples { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+.ex { min-width: 0; }
+.ex h3 { font-size: 13px; font-weight: 500; color: var(--muted); margin: 0 0 6px; font-family: var(--font-mono); }
+pre {
+  margin: 0; background: var(--code-bg); border-radius: 8px; padding: 14px 16px;
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; overflow-x: auto;
+}
+.tbl { overflow-x: auto; background: var(--code-bg); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-family: var(--font-mono); font-weight: 500; font-size: 11.5px; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+
+/* steps */
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 16px; }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; }
+ol.steps li::before {
+  content: counter(s); font-family: var(--font-mono); font-size: 13px; color: var(--accent);
+  border: 1px solid var(--line); border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center;
+  background: var(--surface);
+}
+
+/* rules */
+.rules td:first-child { color: var(--muted); }
+.rules td { white-space: normal; }
+.rules { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+
+.note { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; font-size: 14px; }
+.hash { font-family: var(--font-mono); font-size: 12px; word-break: break-all; }
+
+ul.log { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+ul.log li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; font-size: 14px; }
+ul.log b { font-family: var(--font-mono); font-weight: 500; color: var(--accent); }
+
+footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
+
+@media (max-width: 760px) {
+  .outputs, .examples { grid-template-columns: minmax(0, 1fr); }
+  .wrap { gap: 44px; padding-top: 32px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">SAP BW → ABAP CDS → Datasphere</div>
+      <h1>BWCDSGen</h1>
+      <p class="lead">BW InfoObject 마스터데이터(속성 + 텍스트)를 평탄화한 ABAP CDS View를 자동으로 만들어 주는 Windows 프로그램입니다. 만들어진 CDS는 Datasphere Replication Flow 소스로 바로 쓸 수 있고, 데이터스피어 설계서용 컬럼표도 함께 나옵니다.</p>
+    </div>
+    <div class="flow">0COMP_CODE → COMP_CODE · COMP_CODE_TXTMD · COUNTRY · COUNTRY_TXTMD · REGION · REGION_TXTMD …</div>
+    <div class="cta">
+      <a class="btn" href="https://github.com/SeongTaekLee/bwcdsgen-release/releases/latest/download/BWCDSGen.zip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        최신 버전 다운로드
+      </a>
+      <div class="meta">v1.7 · 10.4 MB · Windows 10/11 64bit · 설치 불필요<br>
+        <a href="https://github.com/SeongTaekLee/bwcdsgen-release/releases">이전 버전과 변경 내역</a></div>
+    </div>
+  </header>
+
+  <figure>
+    <div class="shot"><img src="assets/gui-cds.png" width="1280" height="820" alt="BWCDSGen 화면: 위쪽에 InfoObject 입력과 옵션, 가운데 메타 SQL과 결과 붙여넣기 칸, 아래쪽에 생성된 CDS View 목록과 DDL 소스"></div>
+    <figcaption>InfoObject를 넣고 메타 SQL을 만들고, HANA 결과를 붙여넣으면 CDS View 목록과 소스가 나옵니다.</figcaption>
+  </figure>
+
+  <section aria-labelledby="out-title">
+    <h2 id="out-title">InfoObject 하나에 세 가지 결과물</h2>
+    <div class="outputs">
+      <div class="out"><b>CDS DDL</b><span class="file">ZR_BI_COMP_CODE_EXT_001.asddls</span><p>ADT(Eclipse)에 붙여넣고 활성화. 추출 어노테이션 포함.</p></div>
+      <div class="out"><b>확인용 SQL</b><span class="file">ZR_BI_COMP_CODE_EXT_001.sql</span><p>CDS를 만들기 전에 HANA에서 같은 조인 결과를 먼저 확인.</p></div>
+      <div class="out"><b>설계서 컬럼표</b><span class="file">ZR_BI_COMP_CODE_EXT_001_columns.csv</span><p>Datasphere 기준 타입. 엑셀에 바로 붙여넣기.</p></div>
+    </div>
+    <div class="examples">
+      <div class="ex">
+        <h3>CDS DDL (0COMP_CODE)</h3>
+<pre>@AbapCatalog.sqlViewName: 'ZR_COMP_CODE_001'
+@AbapCatalog.compiler.compareFilter: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: '[BI] 회사코드 데이터소스'
+@Analytics.dataExtraction.enabled: true
+define view ZR_BI_COMP_CODE_EXT_001
+  as select from /bi0/pcomp_code as p
+    left outer join /bi0/tcomp_code as t0
+      on  t0.comp_code = p.comp_code
+    left outer join /bi0/tregion as t2
+      on  t2.country = p.country
+      and t2.region  = p.region
+      and t2.langu   = '3'
+{
+  key p.comp_code as COMP_CODE,
+      t0.txtmd    as COMP_CODE_TXTMD,
+      p.region    as REGION,
+      t2.txtmd    as REGION_TXTMD
+}
+where p.objvers = 'A'</pre>
+      </div>
+      <div class="ex">
+        <h3>설계서 컬럼표</h3>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>column_name</th><th>column_label</th><th>data_type</th><th>spec</th><th>length</th><th>precision</th><th>scale</th><th>is_key</th><th>is_not_null</th></tr></thead>
+            <tbody>
+              <tr><td>COMP_CODE</td><td>회사코드</td><td>String</td><td></td><td>4</td><td></td><td></td><td>Y</td><td>Y</td></tr>
+              <tr><td>COMP_CODE_TXTMD</td><td>회사코드 내역</td><td>String</td><td></td><td>40</td><td></td><td></td><td>N</td><td>N</td></tr>
+              <tr><td>COUNTRY</td><td>국가</td><td>String</td><td></td><td>3</td><td></td><td></td><td>N</td><td>N</td></tr>
+              <tr><td>REGION</td><td>지역(주/도)</td><td>String</td><td></td><td>3</td><td></td><td></td><td>N</td><td>N</td></tr>
+              <tr><td>REGION_TXTMD</td><td>지역(주/도) 내역</td><td>String</td><td></td><td>40</td><td></td><td></td><td>N</td><td>N</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="meta" style="margin-top:8px">CHAR·NUMC → String, CURR·QUAN·DEC → Decimal(p,s), DATS → Date, TIMS → Time</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="use-title">
+    <h2 id="use-title">사용 순서</h2>
+    <ol class="steps">
+      <li><div>zip을 풀고 <span class="k">BWCDSGen.exe</span> 실행. Python이나 DB 드라이버는 필요 없습니다.</div></li>
+      <li><div>InfoObject 입력(예: <span class="k">0COMP_CODE 0REGION</span>) → <b>① 메타 SQL 생성</b>. SQL이 클립보드에 복사됩니다.</div></li>
+      <li><div>HANA SQL 콘솔(HANA Studio, DBeaver, DBACOCKPIT)에서 실행하고 결과 그리드 전체를 복사해 <b>② 붙여넣기</b> 칸에 넣습니다.</div></li>
+      <li><div><b>③ CDS 생성</b> → 목록에서 CDS 선택 → 소스 복사 → ADT에서 Data Definition으로 붙여넣고 활성화. 설계서용은 <b>컬럼표 복사</b>로 엑셀에 붙여넣기.</div></li>
+      <li><div>Datasphere에서 Replication Flow 생성 → 소스: BW ABAP 연결의 CDS → 대상: HDLF 스페이스 Local Table (File), Load Type은 Initial Only.</div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="rule-title">
+    <h2 id="rule-title">기본 규칙</h2>
+    <div class="rules">
+      <table>
+        <tbody>
+          <tr><td>CDS View 이름</td><td><span class="k">ZR_BI_&lt;InfoObject&gt;_EXT_001</span> (30자)</td></tr>
+          <tr><td>sqlViewName</td><td><span class="k">ZR_&lt;InfoObject&gt;_001</span> (16자, 넘치면 잘리고 경고)</td></tr>
+          <tr><td>내역 (label)</td><td><span class="k">[BI] &lt;InfoObject 내역&gt; 데이터소스</span></td></tr>
+          <tr><td>CDS 형식</td><td>ddic (<span class="k">define view</span> + sqlViewName). entity로 변경 가능</td></tr>
+          <tr><td>델타(CDC)</td><td>없음, 전체 적재. 대용량 마스터만 mapping / auto 선택</td></tr>
+          <tr><td>스키마 · 언어</td><td><span class="k">SAPHANADB</span> · 한국어(<span class="k">3</span>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="meta" style="margin-top:10px">모든 값은 화면에서 바꿀 수 있고, 바꾸면 이름 미리보기가 바로 갱신됩니다.</p>
+  </section>
+
+  <div class="note" role="note">
+    <p><b>처음 실행 시 경고가 뜰 수 있습니다.</b> 코드 서명이 없는 exe라 Windows SmartScreen에서 “추가 정보 → 실행”을 눌러야 합니다. 사내 보안 프로그램이 막으면 아래 SHA-256 값으로 예외 등록을 요청하세요.</p>
+    <p class="hash">v1.7 SHA-256 · 88498B878EA7EA43E93DFFBEE385B1F1996BA74F4D0B7BE283BBB301F5789224</p>
+    <p>메타 SQL은 버전에 따라 가져오는 항목이 다릅니다. 프로그램을 업데이트했다면 메타 SQL을 새로 만들어 실행하세요.</p>
+  </div>
+
+  <section aria-labelledby="log-title">
+    <h2 id="log-title">버전 기록</h2>
+    <ul class="log">
+      <li><b>v1.7</b><span>컬럼표 is_key · is_not_null을 Y/N으로, spec은 빈 칸</span></li>
+      <li><b>v1.6</b><span>데이터스피어 설계서용 컬럼표 추가 (엑셀 붙여넣기 / CSV)</span></li>
+      <li><b>v1.5</b><span>CDS 내역을 [BI] &lt;InfoObject 내역&gt; 데이터소스로</span></li>
+      <li><b>v1.4</b><span>스키마 기본값 SAPHANADB</span></li>
+      <li><b>v1.3</b><span>ddic 기본, ZR_BI_…_EXT_001 / ZR_…_001 이름 규칙</span></li>
+      <li><b>v1.1</b><span>델타 없음(전체 적재)을 기본으로</span></li>
+      <li><b>v1.0</b><span>첫 배포: 메타 SQL → 붙여넣기 → CDS 생성</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>BWCDSGen · 메타 테이블 DD02L, DD03L, RSDIOBJ, RSDIOBJT, RSDCHA 기반 · 읽기 전용 SQL만 생성합니다</span>
+    <a href="https://github.com/SeongTaekLee/bwcdsgen-release/releases">Releases</a>
+  </footer>
+</main>
+</body>
+</html>
