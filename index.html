@@ -141,14 +141,14 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 12px; 
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
         최신 버전 다운로드
       </a>
-      <div class="meta">v1.7 · 10.4 MB · Windows 10/11 64bit · 설치 불필요<br>
+      <div class="meta">v1.8 · 10.4 MB · Windows 10/11 64bit · 설치 불필요<br>
         <a href="https://github.com/SeongTaekLee/bwcdsgen-release/releases">이전 버전과 변경 내역</a></div>
     </div>
   </header>
 
   <figure>
-    <div class="shot"><img src="assets/gui-cds.png" width="1280" height="820" alt="BWCDSGen 화면: 위쪽에 InfoObject 입력과 옵션, 가운데 메타 SQL과 결과 붙여넣기 칸, 아래쪽에 생성된 CDS View 목록과 DDL 소스"></div>
-    <figcaption>InfoObject를 넣고 메타 SQL을 만들고, HANA 결과를 붙여넣으면 CDS View 목록과 소스가 나옵니다.</figcaption>
+    <div class="shot"><img src="assets/gui-cds.png" width="1280" height="820" alt="BWCDSGen 화면: 위쪽에 엑셀에서 붙여넣은 InfoObject 목록과 옵션, HANA 직접 접속 칸, 아래쪽에 생성된 CDS View 목록과 DDL 소스"></div>
+    <figcaption>엑셀에서 InfoObject 목록을 긁어 붙여넣고 <b>⚡ 바로 생성</b>을 누르면 CDS View 목록과 소스가 나옵니다. 수백 개도 한 번에 됩니다.</figcaption>
   </figure>
 
   <section aria-labelledby="out-title">
@@ -204,12 +204,13 @@ where p.objvers = 'A'</pre>
   <section aria-labelledby="use-title">
     <h2 id="use-title">사용 순서</h2>
     <ol class="steps">
-      <li><div>zip을 풀고 <span class="k">BWCDSGen.exe</span> 실행. Python이나 DB 드라이버는 필요 없습니다.</div></li>
-      <li><div>InfoObject 입력(예: <span class="k">0COMP_CODE 0REGION</span>) → <b>① 메타 SQL 생성</b>. SQL이 클립보드에 복사됩니다.</div></li>
-      <li><div>HANA SQL 콘솔(HANA Studio, DBeaver, DBACOCKPIT)에서 실행하고 결과 그리드 전체를 복사해 <b>② 붙여넣기</b> 칸에 넣습니다.</div></li>
-      <li><div><b>③ CDS 생성</b> → 목록에서 CDS 선택 → 소스 복사 → ADT에서 Data Definition으로 붙여넣고 활성화. 설계서용은 <b>컬럼표 복사</b>로 엑셀에 붙여넣기.</div></li>
+      <li><div>zip을 풀고 <span class="k">BWCDSGen.exe</span> 실행. 설치는 필요 없습니다.</div></li>
+      <li><div>엑셀에서 InfoObject 목록을 긁어 <b>InfoObject 목록</b> 칸에 붙여넣습니다. 순번·내역·비고 열을 같이 긁어도 되고, 헤더·빈 줄·중복은 자동으로 빠집니다.</div></li>
+      <li><div><b>HANA 직접 접속</b> 칸에 DBeaver와 같은 호스트 · 포트 · 사용자 · 비밀번호를 넣고 <b>⚡ 바로 생성</b>. DBeaver에서 HANA에 한 번 접속해 두었다면 그 HANA 드라이버를 자동으로 찾아 씁니다. 비밀번호는 저장하지 않습니다.</div></li>
+      <li><div>목록에서 CDS 선택 → 소스 복사 → ADT에서 Data Definition으로 붙여넣고 활성화. 설계서용은 <b>컬럼표 복사</b>, 여러 개면 <b>전체 목록 복사 · 전체 컬럼표 복사</b>로 엑셀에 한 번에 붙여넣기.</div></li>
       <li><div>Datasphere에서 Replication Flow 생성 → 소스: BW ABAP 연결의 CDS → 대상: HDLF 스페이스 Local Table (File), Load Type은 Initial Only.</div></li>
     </ol>
+    <p class="meta" style="margin-top:10px"><b>DB 접속이 안 되는 PC라면</b> 예전 방식도 그대로 됩니다: <b>① 메타 SQL 생성</b> → HANA SQL 콘솔에서 실행 → 결과 전체를 <b>② 붙여넣기</b> 칸에 → <b>③ CDS 생성</b>. 결과가 수천 행이 넘으므로 DBeaver는 “모든 행 가져오기” 후 복사하세요. 잘린 결과를 붙여넣으면 프로그램이 알려 줍니다.</p>
   </section>
 
   <section aria-labelledby="rule-title">
@@ -231,13 +232,14 @@ where p.objvers = 'A'</pre>
 
   <div class="note" role="note">
     <p><b>처음 실행 시 경고가 뜰 수 있습니다.</b> 코드 서명이 없는 exe라 Windows SmartScreen에서 “추가 정보 → 실행”을 눌러야 합니다. 사내 보안 프로그램이 막으면 아래 SHA-256 값으로 예외 등록을 요청하세요.</p>
-    <p class="hash">v1.7 SHA-256 · 88498B878EA7EA43E93DFFBEE385B1F1996BA74F4D0B7BE283BBB301F5789224</p>
+    <p class="hash">v1.8 SHA-256 · 930702B34AC41CEB806151B1F3B21EC00A857D212F2791148D8D30A508615C51</p>
     <p>메타 SQL은 버전에 따라 가져오는 항목이 다릅니다. 프로그램을 업데이트했다면 메타 SQL을 새로 만들어 실행하세요.</p>
   </div>
 
   <section aria-labelledby="log-title">
     <h2 id="log-title">버전 기록</h2>
     <ul class="log">
+      <li><b>v1.8</b><span>HANA 직접 접속 + ⚡ 바로 생성, 엑셀 목록 붙여넣기, 수백 개 일괄 생성(전체 목록 · 전체 컬럼표), 잘린 붙여넣기 감지</span></li>
       <li><b>v1.7</b><span>컬럼표 is_key · is_not_null을 Y/N으로, spec은 빈 칸</span></li>
       <li><b>v1.6</b><span>데이터스피어 설계서용 컬럼표 추가 (엑셀 붙여넣기 / CSV)</span></li>
       <li><b>v1.5</b><span>CDS 내역을 [BI] &lt;InfoObject 내역&gt; 데이터소스로</span></li>
@@ -249,7 +251,7 @@ where p.objvers = 'A'</pre>
   </section>
 
   <footer>
-    <span>BWCDSGen · 메타 테이블 DD02L, DD03L, RSDIOBJ, RSDIOBJT, RSDCHA 기반 · 읽기 전용 SQL만 생성합니다</span>
+    <span>BWCDSGen · 메타 테이블 DD02L, DD03L, RSDIOBJ, RSDIOBJT, RSDCHA 기반 · 읽기 전용 조회만 합니다</span>
     <a href="https://github.com/SeongTaekLee/bwcdsgen-release/releases">Releases</a>
   </footer>
 </main>
